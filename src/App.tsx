@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { supabase } from "./lib/supabase";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -88,9 +89,26 @@ function App() {
     setMenuOpen(false);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const { error } = await supabase.from("enquiries").insert({
+      parent_name: formData.get("name") as string,
+      child_name: formData.get("child") as string,
+      contact: formData.get("contact") as string,
+      message: formData.get("message") as string,
+    });
+
+    if (error) {
+      console.error("Enquiry submission failed:", error);
+      alert("Something went wrong. Please try again.");
+      return;
+    }
+
     setSubmitted(true);
+    form.reset();
   };
 
   return (
@@ -206,3 +224,5 @@ function App() {
 }
 
 export default App;
+
+
