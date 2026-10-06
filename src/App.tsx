@@ -1,377 +1,208 @@
-import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import {
+  ArrowDownRight,
   ArrowRight,
-  Bell,
+  Baby,
+  BookOpen,
   Check,
   ChevronDown,
-  CircleHelp,
   Clock3,
   Heart,
-  ImagePlus,
+  Instagram,
   Leaf,
-  LocateFixed,
+  Mail,
   MapPin,
   Menu,
-  PackageCheck,
-  Plus,
-  Search,
+  MessageCircle,
+  Palette,
+  Phone,
+  Play,
   ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
-  Truck,
-  Upload,
+  Star,
+  Sun,
+  Users,
   X,
 } from "lucide-react";
 
-type Category = "All materials" | "Lumber" | "Masonry" | "Fixtures" | "Hardware" | "Landscaping";
+const navItems = [
+  { label: "Our approach", id: "approach" },
+  { label: "The day", id: "day" },
+  { label: "Our space", id: "space" },
+  { label: "Contact", id: "contact" },
+];
 
-type Listing = {
-  id: number;
-  title: string;
-  category: Exclude<Category, "All materials">;
-  quantity: string;
-  price: string;
-  location: string;
-  distance: string;
-  posted: string;
-  seller: string;
-  initials: string;
-  verified?: boolean;
-  image: string;
-  accent: string;
-  description: string;
-};
-
-const initialListings: Listing[] = [
+const programs = [
   {
-    id: 1,
-    title: "Reclaimed red brick",
-    category: "Masonry",
-    quantity: "280 bricks",
-    price: "Free",
-    location: "East Austin",
-    distance: "3.2 mi",
-    posted: "2h ago",
-    seller: "Harbor & Sons",
-    initials: "HS",
-    verified: true,
-    image:
-      "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=900&q=85",
-    accent: "clay",
-    description: "Clean, full-size bricks from a recent renovation. A few have light mortar residue.",
+    icon: Baby,
+    number: "01",
+    title: "Play group",
+    age: "Little beginnings",
+    text: "A gentle first step into a world of friends, stories, songs and curious little discoveries.",
+    color: "lilac",
   },
   {
-    id: 2,
-    title: "Structural pine boards",
-    category: "Lumber",
-    quantity: "34 boards · 2x6",
-    price: "$120 / lot",
-    location: "South Congress",
-    distance: "4.8 mi",
-    posted: "5h ago",
-    seller: "Mason Creek Build Co.",
-    initials: "MC",
-    verified: true,
-    image:
-      "https://images.unsplash.com/photo-1541971875076-8f970d573be6?auto=format&fit=crop&w=900&q=85",
-    accent: "wood",
-    description: "Straight, dry pine boards left over from framing. Pickup with a truck or trailer.",
+    icon: Palette,
+    number: "02",
+    title: "Nursery",
+    age: "Growing together",
+    text: "Hands-on experiences that help children build confidence, communication and a love of learning.",
+    color: "peach",
   },
   {
-    id: 3,
-    title: "Porcelain floor tile",
-    category: "Fixtures",
-    quantity: "18 boxes · 220 sq ft",
-    price: "Free",
-    location: "Mueller",
-    distance: "6.1 mi",
-    posted: "Yesterday",
-    seller: "Atelier North",
-    initials: "AN",
-    image:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=900&q=85",
-    accent: "tile",
-    description: "Matte limestone-look porcelain tile in unopened boxes. Pickup available this weekend.",
-  },
-  {
-    id: 4,
-    title: "Steel angle offcuts",
-    category: "Hardware",
-    quantity: "16 lengths · 6 ft",
-    price: "$45 / lot",
-    location: "North Loop",
-    distance: "7.4 mi",
-    posted: "Yesterday",
-    seller: "Forge Workshop",
-    initials: "FW",
-    image:
-      "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=85",
-    accent: "steel",
-    description: "Powder-coated steel angle offcuts, ideal for brackets, shelving, or small fabrication jobs.",
-  },
-  {
-    id: 5,
-    title: "Concrete garden pavers",
-    category: "Landscaping",
-    quantity: "64 pavers · 24 in",
-    price: "Free",
-    location: "Bouldin Creek",
-    distance: "8.2 mi",
-    posted: "2d ago",
-    seller: "Good Ground Landscapes",
-    initials: "GG",
-    verified: true,
-    image:
-      "https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=900&q=85",
-    accent: "stone",
-    description: "Lightly used concrete pavers from a patio refresh. Some color variation, lots of character.",
-  },
-  {
-    id: 6,
-    title: "Exterior-grade plywood",
-    category: "Lumber",
-    quantity: "12 sheets · 4x8",
-    price: "$60 / lot",
-    location: "Riverside",
-    distance: "9.6 mi",
-    posted: "3d ago",
-    seller: "Fieldline Contractors",
-    initials: "FC",
-    image:
-      "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=85",
-    accent: "plywood",
-    description: "Half-inch exterior plywood sheets. Stored under cover and ready for pickup.",
+    icon: BookOpen,
+    number: "03",
+    title: "Kindergarten readiness",
+    age: "Ready for what’s next",
+    text: "A joyful bridge from play to purposeful learning, with space for every child to find their rhythm.",
+    color: "butter",
   },
 ];
 
-const categories: { label: Category; icon: string }[] = [
-  { label: "All materials", icon: "✦" },
-  { label: "Lumber", icon: "▤" },
-  { label: "Masonry", icon: "▦" },
-  { label: "Fixtures", icon: "◒" },
-  { label: "Hardware", icon: "⌁" },
-  { label: "Landscaping", icon: "⌂" },
+const faqs = [
+  {
+    question: "How can I visit Rainbow Kids Home Nursery?",
+    answer:
+      "We would love to meet your family. Send an enquiry with your preferred time and our team will share the next available visit slot.",
+  },
+  {
+    question: "What does a typical day look like?",
+    answer:
+      "Every day blends open-ended play, circle time, creative making, outdoor movement, stories and quiet moments — following a steady rhythm that helps children feel secure.",
+  },
+  {
+    question: "Where is the nursery located?",
+    answer:
+      "Rainbow Kids Home Nursery is based in Bali, Pali, Rajasthan. Use the map link in the contact section for directions and the latest location details.",
+  },
 ];
 
 function App() {
-  const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [category, setCategory] = useState<Category>("All materials");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("Recently added");
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [saved, setSaved] = useState<number[]>([2, 5]);
-  const [requested, setRequested] = useState<number[]>([]);
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [activeNav, setActiveNav] = useState("Browse materials");
-  const [notice, setNotice] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [activeFaq, setActiveFaq] = useState(0);
 
-  const filteredListings = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    const result = listings.filter((listing) => {
-      const matchesCategory = category === "All materials" || listing.category === category;
-      const matchesSaved = !showSavedOnly || saved.includes(listing.id);
-      const matchesSearch =
-        !query ||
-        [listing.title, listing.category, listing.location, listing.seller].some((field) =>
-          field.toLowerCase().includes(query),
-        );
-      return matchesCategory && matchesSaved && matchesSearch;
-    });
-
-    if (sort === "Price: low to high") {
-      return [...result].sort((a, b) => (a.price === "Free" ? 0 : 1) - (b.price === "Free" ? 0 : 1));
-    }
-    if (sort === "Closest first") {
-      return [...result].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-    }
-    return result;
-  }, [category, listings, saved, search, showSavedOnly, sort]);
-
-  const toggleSaved = (id: number) => {
-    setSaved((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
   };
 
-  const requestItem = (id: number) => {
-    setRequested((current) => (current.includes(id) ? current : [...current, id]));
-    setNotice("Interest sent — the poster will be in touch soon.");
-    window.setTimeout(() => setNotice(""), 3500);
-  };
-
-  const selectNav = (label: string) => {
-    setActiveNav(label);
-    if (label === "My listings") {
-      setNotice("Your listings dashboard is coming next — post a material to get started.");
-      window.setTimeout(() => setNotice(""), 3500);
-    }
-    if (label === "How it works") {
-      document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
-    }
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitted(true);
   };
 
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand" onClick={() => selectNav("Browse materials")} role="button" tabIndex={0}>
-          <span className="brand-mark"><Leaf size={17} strokeWidth={2.5} /></span>
-          <span className="brand-name">RECLAIM</span>
-          <span className="brand-divider" />
-          <span className="brand-subtitle">MATERIALS NETWORK</span>
-        </div>
+    <div className="site-shell">
+      <div className="top-rainbow" aria-hidden="true" />
+      <header className="site-header">
+        <button className="brand" onClick={() => scrollTo("top")} aria-label="Rainbow Kids Home Nursery home">
+          <span className="brand-sun"><Sun size={20} fill="currentColor" strokeWidth={1.8} /></span>
+          <span className="brand-copy">
+            <strong>RAINBOW</strong>
+            <small>KIDS HOME NURSERY</small>
+          </span>
+        </button>
 
         <nav className="desktop-nav" aria-label="Primary navigation">
-          {["Browse materials", "My listings", "How it works"].map((item) => (
-            <button
-              className={activeNav === item ? "nav-link active" : "nav-link"}
-              key={item}
-              onClick={() => selectNav(item)}
-            >
-              {item}
-            </button>
+          {navItems.map((item) => (
+            <button key={item.id} onClick={() => scrollTo(item.id)}>{item.label}</button>
           ))}
         </nav>
 
-        <div className="topbar-actions">
-          <button className="icon-button notification-button" aria-label="Notifications" onClick={() => setNotice("You are all caught up.")}>
-            <Bell size={18} />
-            <span className="notification-dot" />
-          </button>
-          <div className="profile-chip">
-            <span className="profile-avatar">JM</span>
-            <span className="profile-name">Jordan Mills</span>
-            <ChevronDown size={15} />
-          </div>
-          <button className="mobile-menu-button icon-button" aria-label="Open menu" onClick={() => setShowMenu(!showMenu)}>
-            <Menu size={20} />
-          </button>
-          <button className="primary-button post-button" onClick={() => setShowPostModal(true)}>
-            <Plus size={17} strokeWidth={2.5} />
-            Post material
-          </button>
-        </div>
+        <button className="header-cta" onClick={() => setInquiryOpen(true)}>
+          Enquire now <ArrowRight size={16} />
+        </button>
+        <button className="menu-toggle" onClick={() => setMenuOpen((open) => !open)} aria-label="Toggle navigation" aria-expanded={menuOpen}>
+          {menuOpen ? <X size={21} /> : <Menu size={21} />}
+        </button>
       </header>
 
-      {showMenu && (
-        <div className="mobile-nav">
-          {["Browse materials", "My listings", "How it works"].map((item) => (
-            <button key={item} onClick={() => { selectNav(item); setShowMenu(false); }}>{item}</button>
-          ))}
-        </div>
+      {menuOpen && (
+        <nav className="mobile-nav" aria-label="Mobile navigation">
+          {navItems.map((item) => <button key={item.id} onClick={() => scrollTo(item.id)}>{item.label}</button>)}
+          <button className="mobile-nav-cta" onClick={() => { setInquiryOpen(true); setMenuOpen(false); }}>Enquire now <ArrowRight size={16} /></button>
+        </nav>
       )}
 
-      <main>
-        <section className="hero-section page-width">
+      <main id="top">
+        <section className="hero-section">
           <div className="hero-copy">
-            <div className="eyebrow"><span className="eyebrow-line" /> CIRCULAR BUILDING, MADE SIMPLE</div>
-            <h1>Good materials<br /><em>deserve another build.</em></h1>
-            <p className="hero-description">
-              Find useful leftovers from nearby job sites, or give your own surplus a second life.
-            </p>
-            <div className="location-select">
-              <span className="location-icon"><MapPin size={16} /></span>
-              <span><small>Showing materials near</small><strong>Austin, Texas</strong></span>
-              <ChevronDown size={16} className="location-chevron" />
+            <div className="eyebrow"><span className="eyebrow-dot" /> EARLY YEARS, BIG WONDER</div>
+            <h1>A happy place to <em>begin.</em></h1>
+            <p className="hero-lede">Rainbow Kids Home Nursery is a warm, joyful space in Bali, Rajasthan where little minds are free to wonder, play and grow.</p>
+            <div className="hero-actions">
+              <button className="primary-cta" onClick={() => setInquiryOpen(true)}>Plan a visit <ArrowRight size={17} /></button>
+              <button className="play-link" onClick={() => scrollTo("approach")}><span><Play size={12} fill="currentColor" /></span> Discover our approach</button>
             </div>
+            <div className="hero-note"><span className="note-stars"><Star size={13} fill="currentColor" /><Star size={13} fill="currentColor" /><Star size={13} fill="currentColor" /></span><span>Where every little personality has room to shine</span></div>
           </div>
 
-          <div className="hero-visual">
-            <div className="hero-blob blob-one" />
-            <div className="hero-blob blob-two" />
-            <div className="hero-material-card">
-              <div className="material-photo hero-photo" />
-              <div className="hero-card-label"><span className="status-dot" /> 24 materials nearby</div>
-              <div className="hero-card-caption"><span>THE WEEKLY DROP</span><strong>From job site<br />to good use.</strong></div>
-            </div>
-            <div className="floating-stat stat-top"><span className="stat-icon green"><Leaf size={16} /></span><span><strong>12,840 kg</strong><small>diverted this month</small></span></div>
-            <div className="floating-stat stat-bottom"><span className="stat-icon orange"><PackageCheck size={16} /></span><span><strong>1,204</strong><small>items rehomed</small></span></div>
+          <div className="hero-art" aria-label="Children learning and playing together">
+            <div className="hero-sun-shape" />
+            <div className="rainbow-arc rainbow-arc-one" />
+            <div className="rainbow-arc rainbow-arc-two" />
+            <div className="rainbow-arc rainbow-arc-three" />
+            <div className="hero-photo photo-main" />
+            <div className="hero-photo photo-small" />
+            <div className="hero-sticker sticker-flower"><Sparkles size={18} /></div>
+            <div className="hero-sticker sticker-love"><Heart size={17} fill="currentColor" /></div>
+            <div className="hero-caption"><span className="caption-icon"><MapPin size={14} /></span><span><strong>Bali, Rajasthan</strong><small>A little place with a big heart</small></span></div>
+          </div>
+          <div className="hero-cloud cloud-left" aria-hidden="true" />
+          <div className="hero-cloud cloud-right" aria-hidden="true" />
+        </section>
+
+        <section className="intro-strip" id="approach">
+          <div className="section-kicker">A LITTLE ABOUT US</div>
+          <div className="intro-statement">We believe childhood is not a race.<br /><em>It is a beautiful beginning.</em></div>
+          <div className="intro-detail"><p>Our days are filled with meaningful play, kind guidance and the freedom to follow a child’s natural curiosity.</p><button className="underlined-link" onClick={() => scrollTo("day")}>See a day at Rainbow <ArrowDownRight size={16} /></button></div>
+        </section>
+
+        <section className="values-section page-pad">
+          <div className="section-heading centered-heading"><div className="section-kicker">OUR WAY OF GROWING</div><h2>Small moments.<br /><em>Lasting roots.</em></h2><p>Everything we do begins with the child in front of us — their questions, their pace and their wonderful way of seeing the world.</p></div>
+          <div className="values-grid">
+            <article className="value-card value-card-yellow"><span className="value-icon"><Sun size={22} /></span><h3>Wonder first</h3><p>We make room for questions, imagination and the kind of learning that starts with “why?”</p><span className="value-number">01</span></article>
+            <article className="value-card value-card-blue"><span className="value-icon"><Users size={22} /></span><h3>Together, gently</h3><p>Children grow best when they feel seen, heard and surrounded by a caring community.</p><span className="value-number">02</span></article>
+            <article className="value-card value-card-coral"><span className="value-icon"><Leaf size={22} /></span><h3>Rooted in joy</h3><p>From messy making to outdoor play, our everyday experiences are designed to feel good and matter.</p><span className="value-number">03</span></article>
           </div>
         </section>
 
-        <section className="browse-section page-width" id="browse">
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow muted-eyebrow"><span className="eyebrow-line" /> JUST IN YOUR AREA</div>
-              <h2>Browse available materials</h2>
-            </div>
-            <button className="text-button" onClick={() => { setCategory("All materials"); setSearch(""); setShowSavedOnly(false); }}>View all materials <ArrowRight size={16} /></button>
+        <section className="programs-section page-pad" id="day">
+          <div className="split-heading"><div><div className="section-kicker">OUR PROGRAMMES</div><h2>There is a place<br />for every <em>kind of curious.</em></h2></div><p>Our programme grows with your child, giving them the right mix of security, independence and playful challenge at every stage.</p></div>
+          <div className="program-list">
+            {programs.map((program) => {
+              const Icon = program.icon;
+              return <article className={`program-card ${program.color}`} key={program.number}><span className="program-number">{program.number}</span><div className="program-icon"><Icon size={25} /></div><div className="program-content"><div className="program-age">{program.age}</div><h3>{program.title}</h3><p>{program.text}</p><button onClick={() => setInquiryOpen(true)}>Ask about this programme <ArrowRight size={15} /></button></div></article>;
+            })}
           </div>
-
-          <div className="search-bar-row">
-            <div className="search-field">
-              <Search size={19} />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search bricks, timber, tiles..." aria-label="Search materials" />
-              {search && <button className="clear-search" onClick={() => setSearch("")} aria-label="Clear search"><X size={15} /></button>}
-              <span className="search-shortcut">⌘ K</span>
-            </div>
-            <button className={showFilters ? "filter-button active" : "filter-button"} onClick={() => setShowFilters(!showFilters)}><SlidersHorizontal size={17} /> Filters <span className="filter-count">2</span></button>
-            <label className="sort-control"><span>Sort by</span><select value={sort} onChange={(event) => setSort(event.target.value)}><option>Recently added</option><option>Closest first</option><option>Price: low to high</option></select><ChevronDown size={15} /></label>
-          </div>
-
-          {showFilters && (
-            <div className="filter-panel">
-              <div className="filter-panel-copy"><strong>Refine your search</strong><span>Showing items available for pickup</span></div>
-              <div className="filter-toggle-row"><button className="filter-toggle selected"><span className="toggle-check"><Check size={12} /></span>Free only</button><button className="filter-toggle"><span className="toggle-empty" />Available this week</button><button className="filter-toggle"><span className="toggle-empty" />Verified posters</button></div>
-              <button className="filter-clear" onClick={() => setShowFilters(false)}>Done</button>
-            </div>
-          )}
-
-          <div className="category-row">
-            <div className="category-pills">
-              {categories.map((item) => <button key={item.label} className={category === item.label ? "category-pill active" : "category-pill"} onClick={() => setCategory(item.label)}><span>{item.icon}</span>{item.label}</button>)}
-            </div>
-            <button className={showSavedOnly ? "saved-filter active" : "saved-filter"} onClick={() => setShowSavedOnly(!showSavedOnly)}><Heart size={15} fill={showSavedOnly ? "currentColor" : "none"} /> Saved ({saved.length})</button>
-          </div>
-
-          <div className="results-meta"><span><strong>{filteredListings.length}</strong> materials available</span><span className="results-location"><LocateFixed size={14} /> Within 15 miles of Austin</span></div>
-
-          {filteredListings.length > 0 ? (
-            <div className="listing-grid">
-              {filteredListings.map((listing) => <ListingCard key={listing.id} listing={listing} isSaved={saved.includes(listing.id)} isRequested={requested.includes(listing.id)} onToggleSaved={toggleSaved} onRequest={requestItem} />)}
-              <div className="post-prompt-card"><div className="prompt-icon"><Sparkles size={18} /></div><strong>Have materials<br />to share?</strong><p>Turn your surplus into someone else's next project.</p><button onClick={() => setShowPostModal(true)}>Post an item <ArrowRight size={15} /></button></div>
-            </div>
-          ) : (
-            <div className="empty-state"><div className="empty-icon"><Search size={24} /></div><h3>No materials found</h3><p>Try a different search or browse all categories.</p><button className="secondary-button" onClick={() => { setCategory("All materials"); setSearch(""); setShowSavedOnly(false); }}>Clear filters</button></div>
-          )}
         </section>
 
-        <section className="how-section page-width" id="how-it-works">
-          <div className="how-intro"><div className="eyebrow"><span className="eyebrow-line" /> HOW RECLAIM WORKS</div><h2>Keep good stuff<br /><em>in the loop.</em></h2><p>One simple exchange keeps materials out of landfill and helps your next build cost less.</p><button className="text-button">Learn more <ArrowRight size={16} /></button></div>
-          <div className="steps-grid"><div className="step-card"><span className="step-number">01</span><span className="step-icon"><Upload size={21} /></span><h3>Post what you have</h3><p>Snap a photo, add the details, and let your local network know what's available.</p></div><div className="step-card featured"><span className="step-number">02</span><span className="step-icon"><Search size={21} /></span><h3>Find what you need</h3><p>Browse useful materials near you and connect directly with the person posting them.</p></div><div className="step-card"><span className="step-number">03</span><span className="step-icon"><Truck size={21} /></span><h3>Pick it up & build</h3><p>Arrange a pickup, give it a second life, and keep the circle moving forward.</p></div></div>
+        <section className="day-section page-pad" id="space">
+          <div className="day-photo-wrap"><div className="day-photo" /><div className="photo-tag tag-top"><span className="tag-dot" /> Open-ended play</div><div className="photo-tag tag-bottom"><Palette size={14} /> Make. Move. Imagine.</div></div>
+          <div className="day-copy"><div className="section-kicker">THE RAINBOW RHYTHM</div><h2>A day that feels<br /><em>just right.</em></h2><p className="day-lede">There is comfort in a familiar rhythm — and magic in what happens inside it. Our children move through the day with time to connect, create, explore and rest.</p><div className="rhythm-list"><div><span className="rhythm-time">01</span><span><strong>Arrive & connect</strong><small>Warm welcomes and unhurried settling in</small></span></div><div><span className="rhythm-time">02</span><span><strong>Explore & create</strong><small>Play invitations, stories, art and discovery</small></span></div><div><span className="rhythm-time">03</span><span><strong>Move & wonder</strong><small>Fresh air, active play and big questions</small></span></div></div><button className="underlined-link" onClick={() => setInquiryOpen(true)}>Come see it for yourself <ArrowRight size={16} /></button></div>
         </section>
 
-        <section className="trust-strip page-width"><div className="trust-item"><ShieldCheck size={18} /><span><strong>Built for builders</strong> Verified people, real materials</span></div><div className="trust-item"><Leaf size={18} /><span><strong>Waste less together</strong> Every exchange makes an impact</span></div><div className="trust-item"><CircleHelp size={18} /><span><strong>Need a hand?</strong> Our team is here to help</span></div></section>
+        <section className="quote-section">
+          <div className="quote-mark">“</div><blockquote>Give a child a little room,<br />and they will fill it with <em>possibility.</em></blockquote><div className="quote-line" /><p>RAINBOW KIDS HOME NURSERY · BALI, RAJASTHAN</p><div className="quote-doodles" aria-hidden="true"><span>✦</span><span>⌁</span><span>✳</span></div>
+        </section>
+
+        <section className="faq-section page-pad">
+          <div className="faq-intro"><div className="section-kicker">GOOD TO KNOW</div><h2>Questions are<br /><em>welcome here.</em></h2><p>Choosing a nursery is a big little decision. We are happy to talk through whatever is on your mind.</p><button className="primary-cta" onClick={() => setInquiryOpen(true)}>Start a conversation <ArrowRight size={16} /></button></div>
+          <div className="faq-list">{faqs.map((faq, index) => <div className={`faq-item ${activeFaq === index ? "open" : ""}`} key={faq.question}><button onClick={() => setActiveFaq(activeFaq === index ? -1 : index)}><span>{faq.question}</span><span className="faq-toggle"><ChevronDown size={17} /></span></button>{activeFaq === index && <p>{faq.answer}</p>}</div>)}</div>
+        </section>
+
+        <section className="contact-section page-pad" id="contact">
+          <div className="contact-card"><div className="contact-copy"><div className="section-kicker light-kicker">COME SAY HELLO</div><h2>Let’s make<br /><em>something lovely.</em></h2><p>Tell us a little about your family and we’ll help you take the next step.</p><div className="contact-details"><a href="https://maps.google.com/?q=Rainbow+Kids+Home+Nursery+Bali+Rajasthan" target="_blank" rel="noreferrer"><MapPin size={17} /><span><strong>Find us in Bali</strong><small>Pali, Rajasthan · Open map</small></span></a><a href="#contact" onClick={(event) => { event.preventDefault(); setInquiryOpen(true); }}><Mail size={17} /><span><strong>Send an enquiry</strong><small>Ask a question or plan a visit</small></span></a></div></div><div className="contact-art"><div className="contact-circle circle-one" /><div className="contact-circle circle-two" /><div className="contact-flower"><Sparkles size={28} /></div><div className="contact-mini-photo" /></div></div>
+        </section>
       </main>
 
-      {notice && <div className="toast"><span className="toast-check"><Check size={15} /></span>{notice}<button onClick={() => setNotice("")}><X size={14} /></button></div>}
-      {showPostModal && <PostMaterialModal onClose={() => setShowPostModal(false)} onSubmit={(listing) => { setListings((current) => [listing, ...current]); setShowPostModal(false); setNotice("Your material is now live for the Austin network."); window.setTimeout(() => setNotice(""), 4000); }} />}
+      <footer className="site-footer"><div className="footer-brand"><span className="brand-sun"><Sun size={17} fill="currentColor" /></span><span><strong>RAINBOW</strong><small>KIDS HOME NURSERY</small></span></div><div className="footer-note">A joyful start, in Bali, Rajasthan.</div><div className="footer-links"><button onClick={() => scrollTo("approach")}>Our approach</button><button onClick={() => scrollTo("contact")}>Contact</button><a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={17} /></a></div></footer>
+
+      {inquiryOpen && <div className="modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) { setInquiryOpen(false); setSubmitted(false); } }}><div className="inquiry-modal" role="dialog" aria-modal="true" aria-labelledby="inquiry-title"><button className="modal-close" onClick={() => { setInquiryOpen(false); setSubmitted(false); }} aria-label="Close enquiry form"><X size={19} /></button>{submitted ? <div className="success-state"><span className="success-icon"><Check size={23} /></span><div className="section-kicker">THANK YOU</div><h2>We’ll be in touch.</h2><p>Your enquiry has been noted. We look forward to welcoming your family to Rainbow Kids Home Nursery.</p><button className="primary-cta" onClick={() => { setInquiryOpen(false); setSubmitted(false); }}>Done <ArrowRight size={16} /></button></div> : <><div className="section-kicker">START A CONVERSATION</div><h2 id="inquiry-title">Come grow with us.</h2><p className="modal-lede">Share a few details and our team will help you find the right next step.</p><form onSubmit={handleSubmit}><label>Your name<input name="name" placeholder="Parent / guardian name" required /></label><label>Child’s name<input name="child" placeholder="Little one’s name" /></label><label>Email or phone<input name="contact" placeholder="How should we reach you?" required /></label><label>Message<textarea name="message" placeholder="What would you like to know?" rows={3} /></label><button className="primary-cta form-submit" type="submit">Send enquiry <ArrowRight size={16} /></button></form></>}</div></div>}
     </div>
   );
-}
-
-function ListingCard({ listing, isSaved, isRequested, onToggleSaved, onRequest }: { listing: Listing; isSaved: boolean; isRequested: boolean; onToggleSaved: (id: number) => void; onRequest: (id: number) => void }) {
-  return <article className="listing-card">
-    <div className={`listing-image ${listing.accent}`} style={{ backgroundImage: `url(${listing.image})` }}>
-      <div className="listing-topline"><span className="availability-badge"><span className="status-dot" /> Available</span><button className={isSaved ? "save-button saved" : "save-button"} onClick={() => onToggleSaved(listing.id)} aria-label={isSaved ? `Remove ${listing.title} from saved` : `Save ${listing.title}`}><Heart size={17} fill={isSaved ? "currentColor" : "none"} /></button></div>
-      <span className="distance-badge"><MapPin size={12} /> {listing.distance}</span>
-    </div>
-    <div className="listing-content"><div className="listing-category">{listing.category}</div><div className="listing-title-row"><h3>{listing.title}</h3><span className="listing-price">{listing.price}</span></div><p className="listing-quantity">{listing.quantity}</p><p className="listing-description">{listing.description}</p><div className="listing-footer"><div className="seller"><span className={`seller-avatar avatar-${listing.accent}`}>{listing.initials}</span><span><strong>{listing.seller}</strong><small>{listing.location} · {listing.posted}{listing.verified && <><span className="verified-dot">✓</span> Verified</>}</small></span></div><button className={isRequested ? "interest-button sent" : "interest-button"} onClick={() => onRequest(listing.id)}>{isRequested ? <><Check size={14} /> Sent</> : "I'm interested"}</button></div></div>
-  </article>;
-}
-
-function PostMaterialModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (listing: Listing) => void }) {
-  const [form, setForm] = useState({ title: "", category: "Lumber" as Exclude<Category, "All materials">, quantity: "", price: "Free", location: "", description: "" });
-  const [preview, setPreview] = useState("");
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }));
-  const handleImage = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (file) setPreview(URL.createObjectURL(file)); };
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    onSubmit({ id: Date.now(), title: form.title || "New construction material", category: form.category, quantity: form.quantity || "Available for pickup", price: form.price, location: form.location || "Austin", distance: "Nearby", posted: "Just now", seller: "Jordan Mills", initials: "JM", verified: true, image: preview || "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=85", accent: form.category === "Lumber" ? "wood" : form.category.toLowerCase(), description: form.description || "Shared by a local builder through Reclaim." });
-  };
-
-  return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="post-modal-title"><div className="modal-header"><div><div className="eyebrow muted-eyebrow"><span className="eyebrow-line" /> SHARE THE SURPLUS</div><h2 id="post-modal-title">Post a material</h2><p>Help another build get off the ground.</p></div><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button></div><form onSubmit={submit}><div className="form-photo-upload" style={preview ? { backgroundImage: `linear-gradient(#1c251d33,#1c251d33), url(${preview})` } : undefined} onClick={() => fileInput.current?.click()}><input ref={fileInput} type="file" accept="image/*" onChange={handleImage} hidden />{preview ? <div className="photo-selected"><Check size={16} /> Photo added · change photo</div> : <><span className="upload-icon"><ImagePlus size={20} /></span><strong>Add a photo</strong><small>A clear photo helps materials find a new home</small></>}</div><div className="form-grid"><label className="form-field wide"><span>What are you sharing? <b>*</b></span><input required value={form.title} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Leftover cedar fence boards" /></label><label className="form-field"><span>Category <b>*</b></span><span className="select-wrap"><select required value={form.category} onChange={(event) => update("category", event.target.value)}>{categories.slice(1).map((item) => <option key={item.label}>{item.label}</option>)}</select><ChevronDown size={15} /></span></label><label className="form-field"><span>Quantity <b>*</b></span><input required value={form.quantity} onChange={(event) => update("quantity", event.target.value)} placeholder="e.g. 12 boards" /></label><label className="form-field"><span>Pickup location <b>*</b></span><input required value={form.location} onChange={(event) => update("location", event.target.value)} placeholder="Neighborhood or ZIP" /></label><label className="form-field"><span>Price</span><span className="select-wrap"><select value={form.price} onChange={(event) => update("price", event.target.value)}><option>Free</option><option>$20 / lot</option><option>$50 / lot</option><option>Make an offer</option></select><ChevronDown size={15} /></span></label><label className="form-field wide"><span>Short description</span><textarea value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Condition, dimensions, pickup notes..." rows={3} /></label></div><div className="modal-actions"><span><ShieldCheck size={15} /> Your contact details stay private until you connect.</span><div><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="primary-button"><Plus size={16} /> Publish material</button></div></div></form></div></div>;
 }
 
 export default App;
