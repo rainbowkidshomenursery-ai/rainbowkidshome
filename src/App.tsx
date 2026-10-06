@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import AdminPage from "./AdminPage";
 import { supabase } from "./lib/supabase";
 import {
   ArrowDownRight,
@@ -79,6 +80,7 @@ const faqs = [
 ];
 
 function App() {
+  if (window.location.pathname.replace(/\/+$/, "") === "/admin") return <AdminPage />;
   const [menuOpen, setMenuOpen] = useState(false);
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
